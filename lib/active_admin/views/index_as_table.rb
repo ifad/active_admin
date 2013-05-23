@@ -113,7 +113,9 @@ module ActiveAdmin
           :sortable => true,
           :class => "index_table index",
           :i18n => active_admin_config.resource_class,
-          :paginator => page_presenter[:paginator] != false
+          :paginator => page_presenter[:paginator] != false,
+          :row_builder => page_presenter.options[:row_builder],
+          :cell_builder => page_presenter.options[:cell_builder]
         }
 
         table_for collection, table_options do |t|

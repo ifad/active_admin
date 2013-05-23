@@ -8,32 +8,19 @@ module ActiveAdmin
       end
 
       def build(collection, options = {})
-        @sortable = options.delete(:sortable)
+        @sortable       = options.delete(:sortable)
         @resource_class = options.delete(:i18n)
-        @collection = collection
-        @columns = []
+        @row_builder    = options.delete(:row_builder)
+        @cell_builder   = options.delete(:cell_builder)
+        @collection     = collection
+        @columns        = []
         build_table
         super(options)
       end
 
       def column(*args, &block)
-        options = default_options.merge(args.extract_options!)
-        title = args[0]
-        data  = args[1] || args[0]
-
-        col = Column.new(title, data, @resource_class, options, &block)
-        @columns << col
-
-        # Build our header item
-        within @header_row do
-          build_table_header(col)
-        end
-
-        # Add a table cell for each item
-        @collection.each_with_index do |item, i|
-          within @tbody.children[i] do
-            build_table_cell(col, item)
-          end
+        create_column(*args, &block).tap do |col|
+          build_column_elements(col)
         end
       end
 
@@ -47,6 +34,36 @@ module ActiveAdmin
       end
 
       protected
+
+      def create_column(*args, &block)
+        options = default_options.merge(args.extract_options!)
+        title = args[0]
+        data  = args[1] || args[0]
+
+        col = Column.new(title, data, @resource_class, options, &block)
+        @columns << col
+
+        col
+      end
+
+      def build_column_elements(col)
+
+        # Build our header item
+        within @header_row do
+          build_table_header(col)
+        end
+
+        # Add a table cell for each item
+        @collection.each_with_index do |item, i|
+          if @cell_builder
+            instance_exec(col, item, i, &@cell_builder)
+          else
+            within @tbody.children[i] do
+              build_table_cell(col, item)
+            end
+          end
+        end
+      end
 
       def build_table
         build_table_head
@@ -76,10 +93,20 @@ module ActiveAdmin
         end
       end
 
+      def default_row_builder(item)
+        tr(:class => cycle('odd', 'even'), :id => dom_id(item))
+      end
+
       def build_table_body
         @tbody = tbody do
           # Build enough rows for our collection
-          @collection.each{|elem| tr(:class => cycle('odd', 'even'), :id => dom_id(elem)) }
+          if @row_builder
+            @collection.each do |item|
+              instance_exec(item, &@row_builder)
+            end
+          else
+            @collection.each(&method(:default_row_builder))
+          end
         end
       end
 
