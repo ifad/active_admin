@@ -153,7 +153,12 @@ module ActiveAdmin
     end
 
     def sidebar(name, options = {}, &block)
-      config.sidebar_sections << ActiveAdmin::SidebarSection.new(name, options, &block)
+      sidebar = ActiveAdmin::SidebarSection.new(name, options, &block)
+      if options.fetch(:top, false)
+        config.sidebar_sections.unshift(sidebar)
+      else
+        config.sidebar_sections.push(sidebar)
+      end
     end
 
     def decorate_with(decorator_class)
