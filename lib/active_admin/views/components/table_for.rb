@@ -13,6 +13,7 @@ module ActiveAdmin
         @row_builder    = options.delete(:row_builder)
         @cell_builder   = options.delete(:cell_builder)
         @collection     = collection
+        @item_rows      = { }
         @columns        = []
         build_table
         super(options)
@@ -20,7 +21,7 @@ module ActiveAdmin
 
       def column(*args, &block)
         create_column(*args, &block).tap do |col|
-          build_column_elements(col)
+          build_column_elements(col, @collection)
         end
       end
 
@@ -46,19 +47,23 @@ module ActiveAdmin
         col
       end
 
-      def build_column_elements(col)
+      def build_column_elements(col, collection, options = { })
 
         # Build our header item
         within @header_row do
           build_table_header(col)
         end
 
+        build_table_cells(col, collection, options)
+      end
+
+      def build_table_cells(col, collection, options = { })
         # Add a table cell for each item
-        @collection.each_with_index do |item, i|
+        collection.each_with_index do |item, i|
           if @cell_builder
-            instance_exec(col, item, i, &@cell_builder)
+            instance_exec(col, item, &@cell_builder)
           else
-            within @tbody.children[i] do
+            within @item_rows[item] do
               build_table_cell(col, item)
             end
           end
@@ -94,19 +99,22 @@ module ActiveAdmin
       end
 
       def default_row_builder(item)
-        tr(:class => cycle('odd', 'even'), :id => dom_id(item))
+        tr(:class => cycle('odd', 'even'), :id => dom_id(item)).tap do |row|
+          @item_rows[item] = row
+        end
       end
 
       def build_table_body
         @tbody = tbody do
-          # Build enough rows for our collection
-          if @row_builder
-            @collection.each do |item|
-              instance_exec(item, &@row_builder)
-            end
-          else
-            @collection.each(&method(:default_row_builder))
-          end
+          build_table_rows(@collection)
+        end
+      end
+
+      def build_table_rows(collection)
+        if @row_builder
+          collection.each { |item| instance_exec(item, &@row_builder) }
+        else
+          collection.each(&method(:default_row_builder))
         end
       end
 
