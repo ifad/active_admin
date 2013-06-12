@@ -131,7 +131,7 @@ module ActiveAdmin
         if @row_builder
           collection.each { |item| set_row(item, instance_exec(item, &@row_builder)) }
         else
-          collection.each { |item| set_row(item, &method(:default_row_builder)) }
+          collection.each { |item| set_row(item, default_row_builder(item)) }
         end
       end
 
