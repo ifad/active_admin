@@ -14,6 +14,7 @@ module ActiveAdmin
         @cell_builder   = options.delete(:cell_builder)
         @collection     = collection
         @item_rows      = { }
+        @used_row_cols  = { }
         @columns        = []
         build_table
         super(options)
@@ -60,13 +61,23 @@ module ActiveAdmin
       def build_table_cells(col, collection, options = { })
         # Add a table cell for each item
         collection.each_with_index do |item, i|
-          if @cell_builder
-            instance_exec(col, item, &@cell_builder)
-          else
-            within @item_rows[item] do
-              build_table_cell(col, item)
+          fill_row(item, col) do |row|
+            if @cell_builder
+              instance_exec(col, item, &@cell_builder)
+            else
+              within row do
+                build_table_cell(col, item)
+              end
             end
           end
+        end
+      end
+
+      def fill_row(item, col)
+        @used_row_cols[item] ||= { }
+        unless @used_row_cols[item][col]
+          yield(get_row(item))
+          @used_row_cols[item][col] = true
         end
       end
 
@@ -99,9 +110,15 @@ module ActiveAdmin
       end
 
       def default_row_builder(item)
-        tr(:class => cycle('odd', 'even'), :id => dom_id(item)).tap do |row|
-          @item_rows[item] = row
-        end
+        tr(:class => cycle('odd', 'even'), :id => dom_id(item))
+      end
+
+      def set_row(item, row)
+        @item_rows[item] ||= row
+      end
+
+      def get_row(item)
+        @item_rows[item]
       end
 
       def build_table_body
@@ -112,9 +129,9 @@ module ActiveAdmin
 
       def build_table_rows(collection)
         if @row_builder
-          collection.each { |item| instance_exec(item, &@row_builder) }
+          collection.each { |item| set_row(item, instance_exec(item, &@row_builder)) }
         else
-          collection.each(&method(:default_row_builder))
+          collection.each { |item| set_row(item, &method(:default_row_builder)) }
         end
       end
 
