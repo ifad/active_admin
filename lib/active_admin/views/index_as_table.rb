@@ -154,6 +154,11 @@ module ActiveAdmin
           column( resource_selection_toggle_cell, { :class => "selectable" } ) { |resource| resource_selection_cell( resource ) }
         end
 
+        # Display a column for a tree-based check box selection
+        def selectable_tree_column(options = {})
+          column(resource_selection_toggle_tree_cell(options), { :class => "selection" } ) { |resource| resource_selection_tree_cell(resource, options) }
+        end
+
         # Display a column for the id
         def id_column
           column(resource_class.human_attribute_name(resource_class.primary_key), :sortable => resource_class.primary_key) do |resource|

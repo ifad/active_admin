@@ -10,6 +10,7 @@ ActiveAdmin.before_load do |app|
   require "active_admin/batch_actions/views/batch_action_form"
   require "active_admin/batch_actions/views/batch_action_popover"
   require "active_admin/batch_actions/views/selection_cells"
+  require "active_admin/batch_actions/views/tree_selection_cells"
   require "active_admin/batch_actions/views/batch_action_selector"
 
   # Register the views with the view factory
