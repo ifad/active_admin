@@ -7,10 +7,11 @@ module ActiveAdmin
       class TargetNotFound < StandardError; end
 
       # The resource which initiated this relationship
-      attr_reader :owner
+      attr_reader :owner, :route_options
 
       def initialize(owner, target_name, options = {})
         @owner, @target_name, @options = owner, target_name, options
+        @route_options = @options.delete(:route_options) { { } }
       end
 
       # Returns the target resource class or raises an exception if it doesn't exist

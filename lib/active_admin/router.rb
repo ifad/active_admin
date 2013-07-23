@@ -59,7 +59,7 @@ module ActiveAdmin
 
               # Make the nested belongs_to routes
               # :only is set to nothing so that we don't clobber any existing routes on the resource
-              resources config.belongs_to_config.target.resource_name.plural, :only => [] do
+              resources config.belongs_to_config.target.resource_name.plural, config.belongs_to_config.route_options.merge(:only => []) do
                 instance_eval &routes_for_belongs_to
               end
             end
