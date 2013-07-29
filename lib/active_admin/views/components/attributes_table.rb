@@ -18,7 +18,7 @@ module ActiveAdmin
       end
 
       def row(*args, &block)
-        title   = args[0]
+        title   = title_for(args[0])
         options = args.extract_options!
         options[:class] ||= :row
         @table << tr(options) do
@@ -53,6 +53,10 @@ module ActiveAdmin
         previous = current_arbre_element.to_s
         value    = pretty_format find_attr_value attr
         value.blank? && previous == current_arbre_element.to_s ? empty_value : value
+      end
+
+      def title_for(attr)
+        attr
       end
 
       def find_attr_value(attr)
